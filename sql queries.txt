@@ -1,0 +1,60 @@
+-- ============================================
+-- Academic Performance Analysis - SQL Queries
+-- Database: academic_project
+-- Table: physics_even_semester_performance
+-- ============================================
+
+USE academic_project;
+
+-- View the full dataset
+SELECT *
+FROM physics_even_semester_performance;
+
+
+-- Average marks and attendance by department, ranked highest to lowest
+SELECT department,
+       ROUND(AVG(Marks_100), 2) AS Avg_Marks,
+       ROUND(AVG(Attendance_Percent), 2) AS Avg_Attendance,
+       COUNT(*) AS Total_Records
+FROM physics_even_semester_performance
+GROUP BY department
+ORDER BY Avg_Marks DESC;
+
+
+-- Average marks and attendance by year of study
+SELECT Year_of_Study,
+       ROUND(AVG(Marks_100), 2) AS Avg_Marks,
+       ROUND(AVG(Attendance_Percent), 2) AS Avg_Attendance
+FROM physics_even_semester_performance
+GROUP BY Year_of_Study
+ORDER BY Year_of_Study;
+
+
+-- Subjects where even the highest scorer stayed below 90 marks
+-- (identifies consistently difficult subjects)
+SELECT Subject,
+       MAX(Marks_100) AS Highest_Score,
+       ROUND(AVG(Marks_100), 2) AS Avg_Score
+FROM physics_even_semester_performance
+GROUP BY Subject
+HAVING MAX(Marks_100) < 90
+ORDER BY Highest_Score ASC;
+
+
+-- Students with high attendance but failing marks
+-- (flags cases where attendance alone doesn't explain poor performance)
+SELECT Register_Number, Subject, Attendance_Percent, Marks_100
+FROM physics_even_semester_performance
+WHERE Attendance_Percent >= 85 AND Marks_100 < 40
+ORDER BY Attendance_Percent DESC;
+
+
+-- At-risk students: average marks below 50 OR failed 2+ subjects
+SELECT Register_Number, Program, Year_of_Study,
+       ROUND(AVG(Marks_100), 2) AS Avg_Marks,
+       ROUND(AVG(Attendance_Percent), 2) AS Avg_Attendance,
+       SUM(CASE WHEN Result != 'Pass' THEN 1 ELSE 0 END) AS Subjects_Failed
+FROM physics_even_semester_performance
+GROUP BY Register_Number, Program, Year_of_Study
+HAVING Avg_Marks < 50 OR Subjects_Failed >= 2
+ORDER BY Avg_Marks ASC;
